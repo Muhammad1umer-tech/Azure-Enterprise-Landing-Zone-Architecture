@@ -1,0 +1,513 @@
+Love it. Here’s a **14-day, production-ready, day-by-day plan** to build an **Enterprise Azure Landing Zone (Landing Zone + Hub-Spoke + Governance + Security + Monitoring + IaC + CI/CD)** with **deep learning + deep understanding**.
+
+No code. Just *exactly what to do each day*, what to read/learn, what to produce, and what you should be able to explain after each day.
+
+---
+
+# 14-Day Production-Ready Azure Landing Zone Sprint (AZ-104 → Architect/Platform Level)
+
+## Your final deliverables by Day 14
+
+* **Architecture diagrams** (high-level + detailed network)
+* **Terraform repo** with module strategy (even if you later refactor)
+* **Azure Policy** design + assignments
+* **RBAC model** + least privilege
+* **Hub-Spoke network** with routing + firewall patterns
+* **Private Endpoints + Private DNS**
+* **Central logging + alerts + dashboards**
+* **Defender for Cloud + security baseline**
+* **Cost governance** (tags + budgets)
+* **CI/CD pipeline design** (plan/apply with approvals)
+* **Production-style README** like a technical design document
+* **Interview story**: “why I designed it this way”
+
+---
+
+## Day 1 — Requirements + Scope + What “Production Ready” Means
+
+### Learn
+
+* What a **Landing Zone** is (CAF conceptually)
+* Why enterprises split: **Platform vs Workloads**
+* What “production-ready” actually includes: governance, security, monitoring, cost, automation
+
+### Do
+
+* Write a 1-page “Client Requirements” doc:
+
+  * Regions: **Canada Central** primary
+  * Environments: **Dev + Prod**
+  * Network: hub-spoke
+  * No public access to PaaS storage
+  * Central logging and security monitoring
+  * Separate identity duties vs infra duties
+* Define non-functional requirements:
+
+  * Availability goals, auditability, cost controls, least privilege
+
+### Output
+
+* Requirements doc (markdown)
+* List of “must have / nice to have”
+
+### You must be able to explain
+
+* Why landing zones exist (control + scale + repeatability)
+
+---
+
+## Day 2 — Architecture v1 (High-Level Diagram)
+
+### Learn
+
+* Management Groups vs Subscriptions vs Resource Groups
+* Enterprise-scale governance hierarchy
+
+### Do
+
+* Design hierarchy:
+
+  * Root MG
+  * Platform MG
+  * Prod MG
+  * Dev MG
+* Plan subscriptions:
+
+  * Platform subscription (hub/shared)
+  * Dev subscription
+  * Prod subscription
+* Create your **High-Level Architecture Diagram**
+
+  * Governance layer
+  * Network layer
+  * Security layer
+  * Observability layer
+
+### Output
+
+* Diagram v1 (clean, presentable)
+
+### You must be able to explain
+
+* Why subscriptions are split and what goes into Platform vs Workloads
+
+---
+
+## Day 3 — Identity & RBAC (Production Access Model)
+
+### Learn
+
+* Microsoft Entra ID basics for cloud governance
+* RBAC vs Azure Policy (who can vs what is allowed)
+* Privileged access patterns: break-glass, least privilege, separation of duties
+
+### Do
+
+* Define personas + roles:
+
+  * Platform Admin (limited)
+  * Network Admin
+  * Security Admin
+  * App Team Dev
+  * App Team Prod
+  * Reader/Auditor
+* Map each persona to:
+
+  * Management Group scope / Subscription scope
+  * Built-in roles (Owner/Contributor/Reader + specialized roles)
+* Design **break-glass** plan (2 accounts, emergency only)
+
+### Output
+
+* RBAC matrix (table)
+* Access model document
+
+### You must be able to explain
+
+* How you prevent “everyone is Owner” chaos
+
+---
+
+## Day 4 — Azure Policy Strategy (Guardrails)
+
+### Learn
+
+* Policy vs Initiative
+* Effects: Deny, Audit, DeployIfNotExists, Modify
+* Policy assignment scope inheritance
+
+### Do
+
+Design **production policy baseline**, grouped as initiatives:
+
+* **Tagging** required: Environment, Owner, CostCenter, DataClassification
+* Restrict allowed regions (Canada only)
+* Deny public IP creation (or audit + exception process)
+* Enforce diagnostic settings (DeployIfNotExists concept)
+* Allowed VM SKUs (cost control)
+* Require secure transfer for Storage
+* Audit NSG rules that allow 0.0.0.0/0 inbound
+
+### Output
+
+* Policy baseline document:
+
+  * Policy list + purpose + scope + exceptions plan
+
+### You must be able to explain
+
+* How policy reduces risk *without blocking teams permanently*
+
+---
+
+## Day 5 — Network Design (IP Plan + Subnets)
+
+### Learn
+
+* CIDR planning
+* Hub-spoke patterns
+* DNS needs with Private Link
+* Route tables and why they matter
+
+### Do
+
+* Create address plan:
+
+  * Hub VNet CIDR
+  * Dev Spoke CIDR
+  * Prod Spoke CIDR
+* Define subnet layout:
+
+  * Azure Firewall subnet (required name conventions)
+  * Bastion subnet (optional but good)
+  * Management subnet
+  * Workload subnets (Dev/Prod)
+  * Private endpoint subnet (or per-service)
+* Define peering rules:
+
+  * Use hub as central routing and services
+
+### Output
+
+* Network design document + subnet table
+
+### You must be able to explain
+
+* Why you chose those CIDRs and how you prevent IP conflicts later
+
+---
+
+## Day 6 — Hub-Spoke Implementation (Connectivity)
+
+### Learn
+
+* VNet peering behavior and limitations
+* Hub services concept: firewall, bastion, VPN/ER gateways
+* Spoke isolation principles
+
+### Do
+
+* Implement the network:
+
+  * Hub VNet
+  * Dev Spoke
+  * Prod Spoke
+  * Peering with correct flags (gateway transit plan conceptually)
+* Validate connectivity goals:
+
+  * Spokes can reach shared services in hub
+  * Spokes remain isolated unless explicitly allowed
+
+### Output
+
+* Updated diagram showing peering + flows
+
+### You must be able to explain
+
+* What “transitive routing” is and why peering alone doesn’t equal full routing
+
+---
+
+## Day 7 — Routing & Azure Firewall (Traffic Control)
+
+### Learn
+
+* UDR (user-defined routes) in Azure
+* Forced tunneling / default routes
+* Firewall rule types:
+
+  * Network rules
+  * Application rules
+  * DNAT (concept)
+* Egress control patterns (most important in enterprises)
+
+### Do
+
+* Design routing:
+
+  * Spokes route 0.0.0.0/0 through firewall (where appropriate)
+  * Exceptions: Azure service endpoints/private link
+* Design firewall policy:
+
+  * Minimal outbound allowlist approach (documented)
+  * Logging enabled
+* Threat model:
+
+  * What happens if a VM is compromised?
+
+### Output
+
+* Routing table design + firewall policy document
+
+### You must be able to explain
+
+* How you stop “anything can go anywhere” outbound traffic
+
+---
+
+## Day 8 — Private Endpoints + Private DNS (No Public PaaS)
+
+### Learn
+
+* Private Link vs Service Endpoints (differences + when to use)
+* Private DNS zone linkage
+* Name resolution flow for private endpoints
+
+### Do
+
+* Choose 2–3 services to secure with Private Endpoint:
+
+  * Storage account (must)
+  * Key Vault (strongly recommended)
+  * SQL (optional)
+* Design:
+
+  * Where private endpoints live (which subnet)
+  * Private DNS zones required and how they link to VNets
+* Validate “public access disabled” design
+
+### Output
+
+* Private Link design doc + DNS flow diagram
+
+### You must be able to explain
+
+* Why private endpoints matter, and what breaks if DNS is wrong
+
+---
+
+## Day 9 — Secrets & Key Vault + Managed Identity
+
+### Learn
+
+* Why “secrets in code/pipelines” is a disaster
+* Managed Identity basics and patterns
+* Key Vault access control options (RBAC vs access policies conceptually)
+
+### Do
+
+* Design:
+
+  * Key Vault placement (subscription/resource group)
+  * Access rules (who/what can read secrets)
+  * Rotation strategy (even if manual)
+* Create a scenario:
+
+  * App reads secret via Managed Identity
+  * Ops can rotate secret without code changes
+
+### Output
+
+* Identity-to-KeyVault access flow diagram + policy doc
+
+### You must be able to explain
+
+* How Managed Identity reduces secret leakage risk
+
+---
+
+## Day 10 — Logging, Monitoring, and Diagnostics (Production Observability)
+
+### Learn
+
+* Azure Monitor, Log Analytics, Activity Logs
+* Diagnostic settings: where logs go and why centralization matters
+* Common alerts and SLO thinking
+
+### Do
+
+* Design central monitoring:
+
+  * One Log Analytics workspace in Platform subscription
+  * Diagnostic settings for:
+
+    * Firewall
+    * Key services (Storage, Key Vault)
+    * Activity logs per subscription
+* Alert plan:
+
+  * Security: policy changes, firewall denies spikes
+  * Infra: CPU, disk, availability
+  * Cost: budget thresholds
+
+### Output
+
+* Monitoring plan + alert matrix
+
+### You must be able to explain
+
+* How you detect incidents and prove auditability
+
+---
+
+## Day 11 — Defender for Cloud + Security Baseline
+
+### Learn
+
+* Secure Score concept
+* Recommendations, regulatory compliance dashboards
+* JIT access (if you include VMs)
+* Baselines: what “good” looks like
+
+### Do
+
+* Create security baseline checklist:
+
+  * MFA/Conditional Access (document)
+  * Defender plans enabled appropriately
+  * Hardening rules (no public endpoints, restricted inbound)
+  * Vulnerability scanning approach (concept)
+
+### Output
+
+* Security baseline document + “controls mapping”
+
+### You must be able to explain
+
+* How you measure security posture continuously
+
+---
+
+## Day 12 — Terraform Repo Design + Environment Strategy
+
+### Learn
+
+* Module design vs monolith
+* Remote state and locking concept
+* Naming conventions and resource organization
+
+### Do
+
+* Design repo structure:
+
+  * /modules (network, policy, monitoring, private-endpoints, identity)
+  * /env/dev
+  * /env/prod
+* Decide:
+
+  * State per environment
+  * Variables strategy
+  * Outputs strategy
+* Add a change-management rule:
+
+  * “Dev first, then Prod with approvals”
+
+### Output
+
+* Repo structure + standards document
+
+### You must be able to explain
+
+* How you avoid “Terraform spaghetti” and drift
+
+---
+
+## Day 13 — CI/CD Pipeline (Plan/Apply with Approvals)
+
+### Learn
+
+* Pipeline stages: validate → plan → approval → apply
+* How to protect prod
+* Secrets and OIDC/managed identity approach (concept)
+
+### Do
+
+* Design pipeline:
+
+  * PR triggers: fmt/validate + plan
+  * Main branch: apply to Dev automatically
+  * Prod apply: manual approval gate
+* Define controls:
+
+  * Only certain people can approve
+  * Logs retained
+
+### Output
+
+* CI/CD pipeline diagram + process doc
+
+### You must be able to explain
+
+* How your pipeline prevents accidental destructive changes
+
+---
+
+## Day 14 — Final Hardening + Documentation + Interview Story
+
+### Learn
+
+* How to present engineering work like a professional
+
+### Do
+
+* Update diagrams:
+
+  * High-level architecture
+  * Network + routing + DNS
+* Write a production-ready README (like a design doc):
+
+  * Overview
+  * Requirements
+  * Architecture decisions
+  * Governance/RBAC
+  * Policy baseline
+  * Network design
+  * Security + monitoring
+  * Cost controls
+  * CI/CD process
+  * Risks + future improvements
+* Practice interview narrative:
+
+  * 2-minute summary
+  * 10-minute deep dive
+
+### Output
+
+* Final docs + diagrams
+* “Interview cheat sheet” (Q&A)
+
+### You must be able to explain
+
+* Every major design choice and tradeoff
+
+---
+
+# Daily Rule to Guarantee “100% Understanding”
+
+Every day, you must end with these 3 items (write them down):
+
+1. **What did I build/design today?**
+2. **Why is it designed this way?** (tradeoffs)
+3. **If a company asked me to change X, what breaks?**
+
+That’s how you become interview-proof.
+
+---
+
+# If you want, I can also give you:
+
+* A **production-grade checklist** (like a real cloud team uses)
+* A **list of common pitfalls** (private DNS, routing loops, policy lockouts)
+* A set of **50 interview questions** specifically for this project
+
+Say: **“Give me the checklist + pitfalls”** and I’ll drop it.

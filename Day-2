@@ -1,0 +1,245 @@
+Day 2 — Enterprise Hierarchy & Governance Structure
+
+Today we will cover:
+
+1️⃣ Management Groups
+2️⃣ Subscriptions
+3️⃣ Resource Groups
+4️⃣ How they work together in enterprises
+5️⃣ Your Architecture v1 hierarchy
+
+1️⃣ Management Groups (Top Governance Layer)
+4
+Definition
+
+A Management Group (MG) is a governance container for multiple subscriptions.
+
+It allows you to apply:
+
+Azure Policies
+
+RBAC permissions
+
+Compliance rules
+
+once, and they automatically apply to all child subscriptions.
+
+Why Enterprises Use Management Groups
+
+Without MGs:
+
+You must configure:
+
+policies
+
+RBAC
+
+security controls
+
+for every subscription individually.
+
+If a company has:
+
+50 subscriptions
+
+200 subscriptions
+
+500 subscriptions
+
+That becomes impossible to manage.
+
+MGs allow central governance at scale.
+
+Policy Inheritance
+
+Example:
+
+If a policy is assigned at Platform MG:
+
+Platform MG
+   └── Platform Subscription
+   └── Dev Subscription
+   └── Prod Subscription
+
+That policy automatically applies to:
+
+Platform
+
+Dev
+
+Prod
+
+No duplication needed.
+
+2️⃣ Subscriptions (Billing + Isolation Boundary)
+Definition
+
+A subscription is:
+
+a billing boundary
+
+a security isolation boundary
+
+a deployment container
+
+All resources must exist inside a subscription.
+
+Why Enterprises Use Multiple Subscriptions
+
+Because they provide:
+
+1️⃣ Isolation
+
+Dev workloads cannot affect Prod.
+
+2️⃣ Billing separation
+
+Each environment can have its own budget.
+
+3️⃣ Security control
+
+RBAC can be different per subscription.
+
+4️⃣ Scaling
+
+Large companies often have hundreds of subscriptions.
+
+In Your Project
+
+You will create three subscriptions conceptually:
+
+Platform Subscription
+Dev Subscription
+Prod Subscription
+
+Platform Subscription
+
+Contains shared infrastructure:
+
+Hub VNet
+
+Firewall
+
+Log Analytics
+
+Monitoring
+
+DNS
+
+Shared Key Vault
+
+Managed by platform team only.
+
+Dev Subscription
+
+Contains:
+
+development workloads
+
+testing environments
+
+staging services
+
+More relaxed access.
+
+Prod Subscription
+
+Contains:
+
+production applications
+
+customer data
+
+critical services
+
+Strict access and policies.
+
+3️⃣ Resource Groups (Deployment Organization)
+Definition
+
+A Resource Group (RG) is a logical container inside a subscription.
+
+It groups related resources.
+
+Example:
+
+Subscription: Prod
+
+Resource Group: prod-network
+   VNet
+   Firewall
+
+Resource Group: prod-app1
+   VM
+   Storage
+   KeyVault
+Why Resource Groups Exist
+
+They help with:
+
+resource organization
+
+lifecycle management
+
+access control
+
+Important Rule
+
+RBAC and policies can be applied at:
+
+Management Group
+
+Subscription
+
+Resource Group
+
+Individual Resource
+
+Inheritance flows downward.
+
+4️⃣ Enterprise Governance Hierarchy
+
+Here is the typical enterprise model.
+
+Tenant Root Management Group
+│
+├── Platform Management Group
+│       └── Platform Subscription
+│
+├── Production Management Group
+│       └── Prod Subscription
+│
+└── Development Management Group
+        └── Dev Subscription
+
+This structure gives:
+
+governance inheritance
+
+environment isolation
+
+centralized control
+
+5️⃣ Why This Structure Works
+Governance at scale
+Policies applied at MG level propagate automatically.
+Security separation
+Prod policies can be stricter than Dev.
+Clear ownership
+Platform team owns:
+networking
+monitoring
+security
+App teams own workloads.
+
+- Why policies should be assigned at the Management Group level instead of subscription level.
+Policies should be assigned at the Management Group (MG) level because governance must be applied consistently across multiple subscriptions.
+
+- Why Dev and Prod must be separate subscriptions.
+We might have different budget for dev and prod and we might also have to loose some policy or restrict some policy on dev or prod
+
+- Why shared services (firewall, logging) should live in a Platform subscription.
+Because it is managed centrally, and it is a shared infrastructure.
+
+- If a company grows to 20 applications, what changes in this hierarchy?
+only workload layer, not platform layer

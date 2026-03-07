@@ -1,0 +1,173 @@
+## What Microsoft Entra ID Is
+
+**Microsoft Entra ID (formerly Azure AD)** is the **identity system for Azure**.
+
+It manages:
+
+* Users
+* Groups
+* Applications
+* Service Principals
+* Managed Identities
+
+These identities are then used to **authenticate and authorize access to Azure resources**.
+
+---
+
+## Simple Concept
+
+Azure resources **do not store users**.
+
+Instead:
+User → Microsoft Entra ID → Azure Resource
+
+Example:
+
+Developer logs in
+↓
+Authenticated by Entra ID
+↓
+Azure checks RBAC permissions
+↓
+Access granted or denied
+```
+
+---
+
+## Types of Identities
+
+### 1️⃣ Users
+
+Human identities.
+
+Examples:
+
+```
+alice@company.com
+bob@company.com
+```
+
+Used by:
+
+* engineers
+* administrators
+* auditors
+
+---
+
+### 2️⃣ Groups
+
+A collection of users.
+
+Example:
+
+```
+Dev-Team
+Platform-Team
+Security-Team
+```
+
+You assign RBAC **to groups**, not individual users.
+
+Why?
+
+```
+Add/remove users from group → permissions update automatically
+```
+
+---
+
+### 3️⃣ Service Principals
+
+Identity used by **applications or automation**.
+
+Example:
+
+```
+Terraform
+GitHub Actions
+Azure DevOps Pipeline
+```
+
+They need permissions to deploy infrastructure.
+
+---
+
+### 4️⃣ Managed Identities
+
+Special Azure identities attached to resources.
+
+Example:
+
+```
+VM
+App Service
+Function
+```
+
+They allow services to access:
+
+* Key Vault
+* Storage
+* databases
+
+**without storing credentials.**
+
+---
+
+# Identity Flow Example
+Example in your project:
+
+```
+Developer
+↓
+Microsoft Entra ID
+↓
+RBAC Check
+↓
+Dev Subscription
+↓
+Deploy VM
+```
+
+If developer **does not have Contributor role**, deployment fails.
+
+---
+
+# Where Identity Lives in Your Architecture
+
+Identity sits **above everything**.
+
+Your architecture layers should look like:
+
+```
+Identity Layer
+(Microsoft Entra ID)
+
+Governance Layer
+(Management Groups)
+
+Subscription Layer
+
+Network / Workload Layer
+```
+
+Identity controls **who can access all these layers**.
+
+---
+
+# Why Identity Is Critical
+
+Most security incidents are caused by:
+
+* excessive permissions
+* stolen credentials
+* unmanaged identities
+
+So enterprise design focuses heavily on:
+
+```
+Least privilege
+Identity governance
+Access auditing
+```

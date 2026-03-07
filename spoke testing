@@ -1,0 +1,175 @@
+Here’s a **clear, practical “Dev Inheritance Test Plan”** you can run to prove your landing zone inheritance is working. No code needed—just actions + expected results.
+
+Think of inheritance in 3 layers:
+
+1. **Management Group policies (guardrails)**
+2. **RBAC / Access model**
+3. **Platform shared services (network, DNS, logging)**
+
+---
+
+# Dev Inheritance Test Plan
+
+## A) Test Management Group Policy Inheritance (Guardrails)
+
+### Test A1 — Tag enforcement (Deny)
+
+**Action:** Try to deploy a small resource in Dev (e.g., a Storage account or a simple resource) **without required tags**.
+**Expected:** Deployment is **blocked** (denied) with a policy error mentioning missing tags.
+
+✅ Pass means: MG policy is inherited and enforcing standards.
+
+---
+
+### Test A2 — Region restriction (Deny)
+
+**Action:** Try to deploy a resource in a **non-Canada region** (example: East US).
+**Expected:** Deployment is **blocked** due to allowed locations policy.
+
+✅ Pass means: governance is working at scale.
+
+---
+
+### Test A3 — Public IP restriction (Deny or Audit)
+
+**Action:** Try to create a **Public IP** in Dev.
+**Expected:** If you set Deny → it’s blocked. If you set Audit → it deploys but shows **non-compliant**.
+
+✅ Pass means: your platform prevents accidental exposure.
+
+---
+
+### Test A4 — Storage public access disabled (Deny/Audit)
+
+**Action:** Try enabling public network access on Storage/Key Vault (or deploy them with public access).
+**Expected:** Blocked (if Deny) or flagged as non-compliant (if Audit).
+
+✅ Pass means: private-by-default is enforced.
+
+---
+
+## B) Test RBAC Inheritance (Who can do what)
+
+### Test B1 — Developer cannot be Owner in Dev/Prod
+
+**Action:** Sign in with your “developer” identity (or simulate with least privilege account). Try:
+
+* Assign roles
+* Change policies
+* Delete platform resources
+
+**Expected:** Access denied.
+
+✅ Pass means: separation of duties is real.
+
+---
+
+### Test B2 — Platform admin can manage hub, not workload resources (optional)
+
+**Action:** With platform admin identity:
+
+* manage hub firewall/log analytics
+* but not deploy app resources into workload RGs (depending on your design)
+
+**Expected:** Platform team has scoped control.
+
+✅ Pass means: roles are correctly scoped.
+
+*(If you’re using only one identity, you can still validate by checking “Access control (IAM)” role assignments at MG/subscription scope.)*
+
+---
+
+## C) Test Platform Shared Services Inheritance
+
+## C1 — Hub-spoke routing (Firewall / UDR)
+
+**Action:** From the Dev VM (in app subnet), run:
+
+* a simple outbound connection test (like `curl` to a website)
+* then check firewall logs in Log Analytics
+
+**Expected:**
+
+* Outbound traffic is allowed/blocked based on firewall rules
+* Firewall logs show the traffic came from Dev Spoke
+
+✅ Pass means: UDR + hub firewall is actually controlling egress.
+
+---
+
+## C2 — Private Endpoint works (PaaS private-only)
+
+**Action:** From Dev VM, access:
+
+* Storage account (blob)
+* Key Vault (secret list/read)
+
+**Expected:**
+
+* Works **only** through private endpoint
+* Public access should fail if tried from public internet
+
+✅ Pass means: private connectivity is working.
+
+---
+
+## C3 — Private DNS is correct
+
+**Action:** From Dev VM, resolve DNS:
+
+* Storage: `<name>.blob.core.windows.net`
+* Key Vault: `<name>.vault.azure.net`
+
+**Expected:**
+
+* DNS resolves to a **private IP** (10.x/172.x/192.x), not public.
+
+✅ Pass means: Private DNS zones are linked correctly.
+
+---
+
+## C4 — Central logging/diagnostics inherited
+
+**Action:** Verify logs show up centrally for:
+
+* Activity Logs (subscription)
+* Firewall logs (platform)
+* Storage / Key Vault diagnostic logs
+
+**Expected:** Logs are flowing into the **central Log Analytics workspace**.
+
+✅ Pass means: observability is production-grade.
+
+---
+
+# The “Proof Pack” (What to screenshot for portfolio / interview)
+
+Take screenshots of:
+
+1. Policy assignment at **Management Group scope**
+2. A denied deployment error (missing tag / wrong region)
+3. Private DNS resolution output (private IP)
+4. Firewall log entry showing Dev VM traffic
+5. Log Analytics workspace showing collected logs
+6. Defender for Cloud secure score (optional)
+
+This becomes your evidence.
+
+---
+
+# Simple Pass/Fail Checklist (Dev)
+
+You can literally tick these:
+
+* [ ] Tags required policy blocks untagged resource
+* [ ] Allowed locations blocks non-Canada region
+* [ ] Public IP creation blocked or audited
+* [ ] Storage/Key Vault public access blocked or audited
+* [ ] Dev VM outbound traffic goes through firewall (logs prove)
+* [ ] Storage/Key Vault accessible privately via private endpoint
+* [ ] DNS resolves to private IP
+* [ ] Logs from Dev resources appear in central Log Analytics
+
+---
+
+If you tell me what you are using for “test workload” in Dev (Linux VM or Windows VM), I’ll tailor the **exact commands** you should run (still no coding—just terminal commands) and where exactly to look in Azure to confirm each test.
